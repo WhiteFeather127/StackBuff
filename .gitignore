@@ -1,0 +1,23 @@
+# Build output
+Debug/
+Release/
+DevBuild/
+*.dll
+*.pdb
+*.exp
+*.lib
+*.obj
+*.ilk
+
+# VS files
+*.sdf
+*.suo
+*.user
+*.vcxproj.user
+.vs/
+
+# SDK (copy from workspace, not stored in repo)
+Source/SDK/
+
+# IntDir
+IntDir/
