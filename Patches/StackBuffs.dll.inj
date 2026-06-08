@@ -1,3 +1,0 @@
-; StackBuffs 钩子 — 在 EC 框架初始化时注册本库
-; ECInitialize 入口 (0x6BC0CD)，覆写 5 字节，优先级 100000
-0x6BC0CD = StackBuffsECInit, 5, 100000
