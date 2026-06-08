@@ -1,4 +1,4 @@
-#include "StackManager.h"
+﻿#include "StackManager.h"
 #include <EC.Stream.h>
 #include <SwizzleManagerClass.h>
 

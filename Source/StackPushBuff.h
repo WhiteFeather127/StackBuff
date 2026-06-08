@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <WIC.h>
 #include "StackManager.h"
 
