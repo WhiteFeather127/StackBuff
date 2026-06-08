@@ -62,17 +62,17 @@ public:
 	}
 };
 
-// 全局实例 — 构造时自动注册到 EC 框架的 GameClassList
-static StackSaveLoadHandler g_saveLoadHandler;
+// ============================================================
+// DllMain — 在 DLL 加载时直接调用 ECInitLibrary。
+// ECInitLibrary 内部会调用 Init::Initialize() 注册到 IHLibList，
+// EC 框架稍后会自动回调 SDK 中的 MyInit，进而执行 fnFirst/fnOrdered。
+//
+// 优点：无需 .inj 钩子文件，无静态初始化顺序问题。
+// ============================================================
 
-// ============================================================
-// StackBuffsECInit — .inj 文件中定义的钩子函数
-// 在 IHCore 的 ECInitialize 入口 (0x6BC0CD) 处触发，
-// 此时 IHLibList 已就绪，可以安全调用 ECInitLibrary。
-// ============================================================
-extern "C" __declspec(dllexport) DWORD __cdecl StackBuffsECInit(REGISTERS* R)
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 {
-	if (Init::Initialize())
+	if (reason == DLL_PROCESS_ATTACH)
 	{
 		InitDependency dep_WIC{
 			"SIWinterIsComing",
@@ -83,6 +83,9 @@ extern "C" __declspec(dllexport) DWORD __cdecl StackBuffsECInit(REGISTERS* R)
 
 		std::function<void()> fnFirst = []()
 		{
+			// 延迟创建 SaveLoadHandler，确保 GameClassList 已初始化
+			static StackSaveLoadHandler g_saveLoadHandler;
+
 			// 注册对局结束清理回调
 			ECListener::Listen_ClearScenario([]()
 			{
@@ -112,15 +115,5 @@ extern "C" __declspec(dllexport) DWORD __cdecl StackBuffsECInit(REGISTERS* R)
 			{ dep_WIC }
 		);
 	}
-
-	return 0;
-}
-
-// ============================================================
-// DllMain — 空实现，初始化在钩子函数中完成
-// ============================================================
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
-{
 	return TRUE;
 }
