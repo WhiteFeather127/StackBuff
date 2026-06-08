@@ -9,8 +9,8 @@
  * Effect.ExtraCodeA = 栈 ID (数字)
  *
  * 行为：
- *   Mark 状态 → 将单位入栈
- *   Remove 状态 → 将单位出栈
+ *   Active 状态 → 将单位入栈
+ *   After 状态 → 将单位出栈
  *   单位指针无效时 → 清理栈
  *
  * 这是一个仅栈标记的 Buff，不产生游戏性效果。
@@ -24,11 +24,11 @@ public:
 	// 初始化：读取栈 ID 配置
 	virtual void EffectDataInit() override;
 
-	// 挂载时：将单位入栈
-	virtual void OnEnterState_Mark() override;
+	// 激发时：将单位入栈
+	virtual void OnEnterState_Active() override;
 
-	// 移除时：将单位出栈
-	virtual void OnEnterState_Remove() override;
+	// 结束时：将单位出栈
+	virtual void OnEnterState_After() override;
 
 	// 指针失效时：清理栈
 	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override;

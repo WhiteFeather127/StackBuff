@@ -62,6 +62,8 @@ Effect.AcceptBuffs=                        ; Buff 列表 , 给栈顶单位附加
 Effect.Modes=0                             ; 整数 , 【弹出模式】 , 无效值默认为 0 , 默认值是 0
                                            ; 0 = 仅附加 , 不弹出栈顶
                                            ; 1 = 附加后弹出栈顶（移除栈顶单位的 StackPush Buff）
+Effect.Counts=1                            ; 整数 , 触发次数 , 默认值是 1
+Effect.Delay=0                             ; 整数 , 触发间隔（帧数）, 0 表示每帧触发 , 默认值是 0
 ```
 
 ### 广播与监听相关属性

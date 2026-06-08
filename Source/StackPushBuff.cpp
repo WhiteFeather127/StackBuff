@@ -10,9 +10,9 @@ void StackPushBuffClass::EffectDataInit()
 }
 
 // ============================================================
-// OnEnterState_Mark - 挂载时将单位入栈
+// OnEnterState_Active - 激发时将单位入栈
 // ============================================================
-void StackPushBuffClass::OnEnterState_Mark()
+void StackPushBuffClass::OnEnterState_Active()
 {
 	TechnoClass* owner = GetOwnerTechno();
 	HouseClass* house = GetActiveOwnerHouse();
@@ -23,9 +23,9 @@ void StackPushBuffClass::OnEnterState_Mark()
 }
 
 // ============================================================
-// OnEnterState_Remove - 移除时将单位出栈
+// OnEnterState_After - 结束时将单位出栈
 // ============================================================
-void StackPushBuffClass::OnEnterState_Remove()
+void StackPushBuffClass::OnEnterState_After()
 {
 	TechnoClass* owner = GetOwnerTechno();
 	HouseClass* house = GetActiveOwnerHouse();
