@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 
 echo ========================================
-echo MyWICBuffs Build Script
+echo StackBuffs Build Script
 echo ========================================
 
 set VSWHERE="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -28,7 +28,7 @@ call "%VSROOT%\Common7\Tools\VsDevCmd.bat" -arch=x86
 
 echo.
 echo Building Release/Win32...
-msbuild MyWICBuffs.vcxproj "/p:Configuration=Release" "/p:Platform=Win32" "/t:Build" "/v:minimal"
+msbuild StackBuffs.vcxproj "/p:Configuration=Release" "/p:Platform=Win32" "/t:Build" "/v:minimal"
 
 if %ERRORLEVEL% EQU 0 (
     echo.

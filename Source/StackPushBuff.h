@@ -22,43 +22,16 @@ public:
 	StackPushBuffClass() : SIBuffClass() {}
 
 	// 初始化：读取栈 ID 配置
-	virtual void EffectDataInit() override
-	{
-		// 从 Type 定义中读取 ExtraCodeA 作为栈 ID
-		if (Type)
-		{
-			SIExtraCode_A = Type->SIEffect_ExtraCodeA;
-		}
-	}
+	virtual void EffectDataInit() override;
 
 	// 挂载时：将单位入栈
-	virtual void OnEnterState_Mark() override
-	{
-		TechnoClass* owner = GetOwnerTechno();
-		HouseClass* house = GetActiveOwnerHouse();
-		if (owner && house)
-		{
-			StackManager::Get().Push(SIExtraCode_A, house, owner);
-		}
-	}
+	virtual void OnEnterState_Mark() override;
 
 	// 移除时：将单位出栈
-	virtual void OnEnterState_Remove() override
-	{
-		TechnoClass* owner = GetOwnerTechno();
-		HouseClass* house = GetActiveOwnerHouse();
-		if (owner && house)
-		{
-			StackManager::Get().RemoveUnit(SIExtraCode_A, house, owner);
-		}
-	}
+	virtual void OnEnterState_Remove() override;
 
 	// 指针失效时：清理栈
-	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override
-	{
-		StackManager::Get().OnPointerGotInvalid(ptr, removed);
-	}
+	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override;
 
-private:
 	// SIExtraCode_A 自动存读档，用来存储栈 ID
 };

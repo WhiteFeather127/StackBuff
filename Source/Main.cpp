@@ -4,6 +4,7 @@
 #include <EC.GameClass.h>
 #include <EC.Stream.h>
 #include <WIC.h>
+#include <Syringe.h>
 
 #include "StackManager.h"
 #include "StackPushBuff.h"
@@ -14,6 +15,11 @@
 namespace Init {
 	bool Initialize();
 }
+
+// ============================================================
+// SyringeForceLoad — 强制 SyringeIH 加载本 DLL
+// ============================================================
+extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 
 // ============================================================
 // ECGameClass_ 派生类 — 自动接入 EC 框架的 Save/Load 系统
@@ -60,58 +66,46 @@ public:
 static StackSaveLoadHandler g_saveLoadHandler;
 
 // ============================================================
-// Callbacks
+// StackBuffsECInit — .inj 文件中定义的钩子函数
+// 在 IHCore 的 ECInitialize 入口 (0x6BC0CD) 处触发，
+// 此时 IHLibList 已就绪，可以安全调用 ECInitLibrary。
 // ============================================================
-
-void OnFirstInit()
+extern "C" __declspec(dllexport) DWORD __cdecl StackBuffsECInit(REGISTERS* R)
 {
-	// 注册读档后恢复回调（此时 Swizzle 已完成）
-	ECListener::Listen_AfterLoadGame([]()
+	if (Init::Initialize())
 	{
-		// 如需要可在读档完成后做额外处理
-	});
-
-	// 注册对局结束清理回调
-	ECListener::Listen_ClearScenario([]()
-	{
-		StackManager::Get().ClearAll();
-	});
-}
-
-void OnOrderedInit()
-{
-	// 注册自定义 Buff 效果类型（此时 WIC 已可用）
-	int pushId = SIClassManager::RegisterBuff<StackPushBuffClass>("StackPush");
-	int topId = SIClassManager::RegisterBuff<StackTopBuffClass>("StackTopBuff");
-}
-
-// ============================================================
-// DllMain
-// ============================================================
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
-{
-	if (reason == DLL_PROCESS_ATTACH)
-	{
-		// 初始化 EC/Syringe 框架
-		if (!Init::Initialize())
-			return FALSE;
-
-		// 声明依赖：需要 WIC（SIWinterIsComing）
 		InitDependency dep_WIC{
 			"SIWinterIsComing",
 			DoNotCheckVersion,
 			WIC_LIBRARY_VERSION,
-			true // 必需依赖
+			true
 		};
 
-		// 注册本库
-		std::function<void()> fnFirst = OnFirstInit;
-		std::function<void()> fnOrdered = OnOrderedInit;
+		std::function<void()> fnFirst = []()
+		{
+			// 注册对局结束清理回调
+			ECListener::Listen_ClearScenario([]()
+			{
+				StackManager::Get().ClearAll();
+			});
+		};
+
+		std::function<void()> fnOrdered = []()
+		{
+			try
+			{
+				SIClassManager::RegisterBuff<StackPushBuffClass>("StackPush");
+				SIClassManager::RegisterBuff<StackTopBuffClass>("StackTopBuff");
+			}
+			catch (SIException& e)
+			{
+				// 注册失败时记录错误，防止崩溃
+			}
+		};
+
 		ECInitLibrary(
-			"MyWICBuffs",          // 库名
-			1,                      // 版本
-			1,                      // 最低兼容版本
+			"StackBuffs",
+			1, 1,
 			(UTF8_CString)u8"WIC Stack Buff System - Push & TopOfStack",
 			fnFirst,
 			fnOrdered,
@@ -119,5 +113,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 		);
 	}
 
+	return 0;
+}
+
+// ============================================================
+// DllMain — 空实现，初始化在钩子函数中完成
+// ============================================================
+
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
+{
 	return TRUE;
 }

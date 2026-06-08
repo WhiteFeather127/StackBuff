@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${workspaceFolder}/Source",
+        "${workspaceFolder}/Source/SDK",
+        "${workspaceFolder}/Source/SDK/ThirdParty",
+        "${workspaceFolder}/YRpp"
+      ],
+      "compilerPath": "",
+      "cStandard": "c17",
+      "cppStandard": "cpp20",
+      "intelliSenseMode": "windows-msvc-x86",
+      "configurationProvider": "ms-vscode.cmake-tools"
+    }
+  ],
+  "version": 4
+}

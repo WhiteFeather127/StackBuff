@@ -4,9 +4,10 @@
     <ShowAllFiles>true</ShowAllFiles>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>MyWICBuffs</ProjectName>
-    <RootNamespace>MyWICBuffs</RootNamespace>
+    <ProjectName>StackBuffs</ProjectName>
+    <RootNamespace>StackBuffs</RootNamespace>
     <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <TargetName>StackBuffs</TargetName>
     <VCProjectVersion>15.0</VCProjectVersion>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ThisDir>$(MSBuildThisFileDirectory)</ThisDir>
@@ -96,6 +97,8 @@
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\StackManager.cpp" />
+    <ClCompile Include="Source\StackPushBuff.cpp" />
+    <ClCompile Include="Source\StackTopBuff.cpp" />
     <!-- SDK source files -->
     <ClCompile Include="Source\SDK\EC.cpp" />
     <ClCompile Include="Source\SDK\EC.GameClass.cpp" />
