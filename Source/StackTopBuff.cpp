@@ -6,11 +6,8 @@
 // ============================================================
 void StackTopBuffClass::EffectDataInit()
 {
-	if (Type)
-	{
-		SIExtraCode_A = Type->SIEffect_ExtraCodeA;			   // 栈 ID
-		SIEffectMode_0 = Type->SIEffect_Modes.TryGetItem(0, 0); // 出栈标志
-	}
+	SIExtraCode_A = Type->SIEffect_ExtraCodeA;
+	SIEffectMode_0 = Type->SIEffect_Modes.GetItem(0);
 }
 
 // ============================================================

@@ -6,10 +6,7 @@
 // ============================================================
 void StackPushBuffClass::EffectDataInit()
 {
-	if (Type)
-	{
-		SIExtraCode_A = Type->SIEffect_ExtraCodeA;
-	}
+	SIExtraCode_A = Type->SIEffect_ExtraCodeA;
 }
 
 // ============================================================
