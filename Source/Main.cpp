@@ -98,7 +98,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 			try
 			{
 				SIClassManager::RegisterBuff<StackPushBuffClass>("StackPush");
-				SIClassManager::RegisterBuff<StackTopBuffClass>("StackTopBuff");
+				SIClassManager::RegisterBuff<StackTopBuffClass>("StackTop");
 			}
 			catch (SIException& e)
 			{

@@ -5,7 +5,7 @@
 /*
  * StackTopBuffClass - 栈顶附加 Buff
  *
- * Effect.Type=StackTopBuff
+ * Effect.Type=StackTop
  * Effect.ExtraCodeA = 栈 ID (数字)
  * Effect.AcceptBuffs = 要给栈顶单位附加的 Buff 名称列表
  * Effect.Modes[0] = 0=不弹出, 1=附加后弹出栈顶单位
