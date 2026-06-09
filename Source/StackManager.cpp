@@ -1,6 +1,8 @@
 ﻿#include "StackManager.h"
+#include <WIC.h>
 #include <EC.Stream.h>
 #include <SwizzleManagerClass.h>
+#include <cstdint>
 
 StackManager& StackManager::Get()
 {
@@ -8,24 +10,34 @@ StackManager& StackManager::Get()
 	return instance;
 }
 
-void StackManager::Push(int stackId, HouseClass* house, TechnoClass* unit)
+// ============================================================
+// Push - 将 buff 实例入栈
+// ============================================================
+void StackManager::Push(int stackId, SIBuffClass* buff)
 {
-	if (!house || !unit)
+	if (!buff)
 		return;
 
-	auto& stacks = m_data[house];
-	auto& vec = stacks[stackId];
+	HouseClass* house = buff->GetActiveOwnerHouse();
+	if (!house)
+		return;
 
-	// 去重：检查单位是否已在栈中
-	for (auto* u : vec)
+	TechnoClass* owner = buff->GetOwnerTechno();
+	auto& vec = m_data[house][stackId];
+
+	// 去重：检查同一 buff 实例是否已在栈中
+	for (const auto& entry : vec)
 	{
-		if (u == unit)
-			return; // 已在栈中，不重复入栈
+		if (entry.Buff == buff)
+			return;
 	}
 
-	vec.push_back(unit);
+	vec.push_back({ buff, owner });
 }
 
+// ============================================================
+// Pop - 弹出栈顶（不移除 buff，仅弹出条目）
+// ============================================================
 void StackManager::Pop(int stackId, HouseClass* house)
 {
 	if (!house)
@@ -43,7 +55,10 @@ void StackManager::Pop(int stackId, HouseClass* house)
 		stackIt->second.pop_back();
 }
 
-TechnoClass* StackManager::GetTop(int stackId, HouseClass* house) const
+// ============================================================
+// GetTop - 获取栈顶 buff 实例（惰性重建：若 buff 为 null 则通过 owner 查找）
+// ============================================================
+SIBuffClass* StackManager::GetTop(int stackId, HouseClass* house)
 {
 	if (!house)
 		return nullptr;
@@ -59,13 +74,30 @@ TechnoClass* StackManager::GetTop(int stackId, HouseClass* house) const
 	if (stackIt->second.empty())
 		return nullptr;
 
-	return stackIt->second.back();
+	auto& entry = stackIt->second.back();
+
+	// 惰性重建：buff 指针为 null 但 owner 有效时，尝试通过 owner 查找 StackPush buff
+	if (!entry.Buff && entry.Owner)
+	{
+		entry.Buff = ResolvePushBuff(entry.Owner);
+	}
+
+	return entry.Buff;
 }
 
-bool StackManager::RemoveUnit(int stackId, HouseClass* house, TechnoClass* unit)
+// ============================================================
+// RemoveBuff - 从栈中移除指定的 buff 实例
+// ============================================================
+bool StackManager::RemoveBuff(SIBuffClass* buff)
 {
-	if (!house || !unit)
+	if (!buff)
 		return false;
+
+	HouseClass* house = buff->GetActiveOwnerHouse();
+	if (!house)
+		return false;
+
+	int stackId = buff->SIExtraCode_A;
 
 	auto houseIt = m_data.find(house);
 	if (houseIt == m_data.end())
@@ -78,7 +110,7 @@ bool StackManager::RemoveUnit(int stackId, HouseClass* house, TechnoClass* unit)
 	auto& vec = stackIt->second;
 	for (auto it = vec.begin(); it != vec.end(); ++it)
 	{
-		if (*it == unit)
+		if (it->Buff == buff)
 		{
 			vec.erase(it);
 			return true;
@@ -87,17 +119,26 @@ bool StackManager::RemoveUnit(int stackId, HouseClass* house, TechnoClass* unit)
 	return false;
 }
 
+// ============================================================
+// ClearHouse - 清除某一阵营的所有栈
+// ============================================================
 void StackManager::ClearHouse(HouseClass* house)
 {
 	if (house)
 		m_data.erase(house);
 }
 
+// ============================================================
+// ClearAll - 清除所有栈
+// ============================================================
 void StackManager::ClearAll()
 {
 	m_data.clear();
 }
 
+// ============================================================
+// GetSize - 获取栈大小
+// ============================================================
 int StackManager::GetSize(int stackId, HouseClass* house) const
 {
 	if (!house)
@@ -114,42 +155,47 @@ int StackManager::GetSize(int stackId, HouseClass* house) const
 	return static_cast<int>(stackIt->second.size());
 }
 
+// ============================================================
+// IsEmpty - 判断栈是否为空
+// ============================================================
 bool StackManager::IsEmpty(int stackId, HouseClass* house) const
 {
 	return GetSize(stackId, house) == 0;
 }
 
-void StackManager::OnPointerGotInvalid(AbstractClass* ptr, bool removed)
+// ============================================================
+// ResolvePushBuff - 通过 owner 查找其身上的 StackPush buff
+// ============================================================
+SIBuffClass* StackManager::ResolvePushBuff(TechnoClass* owner) const
 {
-	if (!ptr)
-		return;
+	if (!owner)
+		return nullptr;
 
-	// 遍历所有栈，移除失效的指针
-	for (auto& [house, stacks] : m_data)
-	{
-		for (auto& [stackId, vec] : stacks)
-		{
-			for (auto it = vec.begin(); it != vec.end(); )
-			{
-				if (*it == ptr)
-					it = vec.erase(it);
-				else
-					++it;
-			}
-		}
-	}
+	SIInterface_ExtendData* ext = SIClassManager::GetExtendData(owner);
+	if (!ext)
+		return nullptr;
+
+	SIBuffTypeClass* pushType = SIClassManager::BuffType_Find("StackPush");
+	if (!pushType)
+		return nullptr;
+
+	return ext->Buff_GetBuff(pushType);
 }
 
+// ============================================================
+// SaveToStream - 序列化（保存 owner 指针，它会被 EC 框架自动 Swizzle）
+// ============================================================
 void StackManager::SaveToStream(ECStreamWriter& stream) const
 {
-	// 格式: [houseCount] -> 对每个 house: [housePtr] [stackCount] -> 对每个 stack: [stackId] [unitCount] [unitPtr...]
+	// 格式: [houseCount] -> 对每个 house: [housePtr] [stackCount]
+	//   -> 对每个 stack: [stackId] [entryCount]
+	//     -> 对每个 entry: [ownerPtr]
 
 	uint32_t houseCount = static_cast<uint32_t>(m_data.size());
 	ECSavegameHelper::WriteStream(stream, houseCount);
 
 	for (const auto& [house, stacks] : m_data)
 	{
-		// 写入 house 指针（会在加载时被 Swizzle 重排）
 		ECSavegameHelper::WriteStream(stream, house);
 
 		uint32_t stackCount = static_cast<uint32_t>(stacks.size());
@@ -159,21 +205,23 @@ void StackManager::SaveToStream(ECStreamWriter& stream) const
 		{
 			ECSavegameHelper::WriteStream(stream, stackId);
 
-			uint32_t unitCount = static_cast<uint32_t>(vec.size());
-			ECSavegameHelper::WriteStream(stream, unitCount);
+			uint32_t entryCount = static_cast<uint32_t>(vec.size());
+			ECSavegameHelper::WriteStream(stream, entryCount);
 
-			for (const auto* unit : vec)
+			for (const auto& entry : vec)
 			{
-				// 写入单位指针（会在加载时被 Swizzle 重排）
-				ECSavegameHelper::WriteStream(stream, unit);
+				// 保存 owner 指针（会在加载时被 Swizzle 重排）
+				ECSavegameHelper::WriteStream(stream, entry.Owner);
 			}
 		}
 	}
 }
 
+// ============================================================
+// LoadFromStream - 反序列化（读入 owner 指针，FinalSwizzle 中 Swizzle）
+// ============================================================
 void StackManager::LoadFromStream(ECStreamReader& stream)
 {
-	// 清空现有数据
 	ClearAll();
 
 	uint32_t houseCount = 0;
@@ -182,7 +230,7 @@ void StackManager::LoadFromStream(ECStreamReader& stream)
 	for (uint32_t h = 0; h < houseCount; ++h)
 	{
 		HouseClass* house = nullptr;
-		ECSavegameHelper::ReadStream(stream, house, false); // 仅读取, 不在局部变量注册 Swizzle
+		ECSavegameHelper::ReadStream(stream, house, false);
 
 		uint32_t stackCount = 0;
 		ECSavegameHelper::ReadStream(stream, stackCount, false);
@@ -194,29 +242,33 @@ void StackManager::LoadFromStream(ECStreamReader& stream)
 			int stackId = 0;
 			ECSavegameHelper::ReadStream(stream, stackId, false);
 
-			uint32_t unitCount = 0;
-			ECSavegameHelper::ReadStream(stream, unitCount, false);
+			uint32_t entryCount = 0;
+			ECSavegameHelper::ReadStream(stream, entryCount, false);
 
 			auto& vec = stacks[stackId];
-			vec.reserve(unitCount);
+			vec.reserve(entryCount);
 
-			for (uint32_t u = 0; u < unitCount; ++u)
+			for (uint32_t u = 0; u < entryCount; ++u)
 			{
-				TechnoClass* unit = nullptr;
-				ECSavegameHelper::ReadStream(stream, unit, false); // 仅读取, 不在局部变量注册 Swizzle
-				vec.push_back(unit);
+				TechnoClass* owner = nullptr;
+				ECSavegameHelper::ReadStream(stream, owner, false);
+				// Buff 先置 null，FinalSwizzle 中 swizzle owner，GetTop 惰性重建 buff
+				vec.push_back({ nullptr, owner });
 			}
 		}
 	}
 }
 
+// ============================================================
+// FinalSwizzle - 加载后重排 house 和 owner 指针（不重建 buff，由 GetTop 惰性完成）
+// ============================================================
 void StackManager::FinalSwizzle()
 {
 	// 第一阶段：收集需要重排的 house 指针
-	// 注意：不能在迭代时修改 map 的 key，所以先收集再处理
 	struct HouseSwap {
 		HouseClass* oldPtr;
 		HouseClass* newPtr;
+		std::map<int, std::vector<StackEntry>> stacks;
 	};
 	std::vector<HouseSwap> houseSwaps;
 
@@ -226,33 +278,31 @@ void StackManager::FinalSwizzle()
 		SwizzleManagerClass::Instance.Swizzle(reinterpret_cast<void**>(&newHouse));
 		if (newHouse != house)
 		{
-			houseSwaps.push_back({ house, newHouse });
+			houseSwaps.push_back({ house, newHouse, std::move(stacks) });
 		}
 	}
 
 	// 应用 house 指针重排
-	for (const auto& swap : houseSwaps)
+	for (auto& swap : houseSwaps)
 	{
-		auto node = m_data.extract(swap.oldPtr);
-		if (!node.empty())
-		{
-			node.key() = swap.newPtr;
-			m_data.insert(std::move(node));
-		}
+		m_data[swap.newPtr] = std::move(swap.stacks);
+		m_data.erase(swap.oldPtr);
 	}
 
-	// 第二阶段：重排所有栈中的单位指针
-	// 注意: 此时 Swizzle 映射已由 EC 框架的全局 Swizzle 阶段建立完毕
-	// 我们在此手动查找每个指针的新地址
+	// 第二阶段：Swizzle 每个 entry 中的 owner 指针
+	// buff 指针不在这里重建，留到 GetTop 惰性重建以确保拿到正确的实例
 	for (auto& [house, stacks] : m_data)
 	{
 		for (auto& [stackId, vec] : stacks)
 		{
-			for (auto& unit : vec)
+			for (auto& entry : vec)
 			{
-				TechnoClass* newUnit = unit;
-				SwizzleManagerClass::Instance.Swizzle(reinterpret_cast<void**>(&newUnit));
-				unit = newUnit;
+				if (entry.Owner)
+				{
+					TechnoClass* newOwner = entry.Owner;
+					SwizzleManagerClass::Instance.Swizzle(reinterpret_cast<void**>(&newOwner));
+					entry.Owner = newOwner;
+				}
 			}
 		}
 	}

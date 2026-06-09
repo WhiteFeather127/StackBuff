@@ -14,8 +14,10 @@
  *   OnEnterState_Active（激发阶段）→ 重置 SICountLeft/SIDelayLeft
  *   EffectAI（生效阶段）→ 手动管理 SIDelayLeft/SICountLeft，
  *                          按 Delay→执行→Count 的顺序逐帧递减。
- *                          延迟归零时：查找栈顶单位，通过 Buff_CreateOrMerge 附加 Buff，
- *                          如果 Modes[0]==1 则移除栈顶单位的 StackPushBuff（出栈）。
+ *                          延迟归零时：获取栈顶 buff 实例，
+ *                          通过 buff->GetOwnerTechno() 获取单位，
+ *                          通过 Buff_CreateOrMerge 附加 Buff，
+ *                          如果 Modes[0]==1 则直接结束 buff 实例（topBuff->TryAfter()）完成出栈。
  *                          次数耗尽后调用 EnterState(结束) 结束自身。
  *   配置：Effect.Counts[0] = 次数, Effect.Delay = 间隔帧数
  *

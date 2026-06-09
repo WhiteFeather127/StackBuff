@@ -10,35 +10,32 @@ void StackPushBuffClass::EffectDataInit()
 }
 
 // ============================================================
-// OnEnterState_Active - 激发时将单位入栈
+// OnEnterState_Active - 激发时将自身入栈
 // ============================================================
 void StackPushBuffClass::OnEnterState_Active()
 {
-	TechnoClass* owner = GetOwnerTechno();
-	HouseClass* house = GetActiveOwnerHouse();
-	if (owner && house)
-	{
-		StackManager::Get().Push(SIExtraCode_A, house, owner);
-	}
+	StackManager::Get().Push(SIExtraCode_A, this);
 }
 
 // ============================================================
-// OnEnterState_After - 结束时将单位出栈
+// OnEnterState_After - After 状态时将自身出栈（Buff_TryAfter 触发）
 // ============================================================
 void StackPushBuffClass::OnEnterState_After()
 {
-	TechnoClass* owner = GetOwnerTechno();
-	HouseClass* house = GetActiveOwnerHouse();
-	if (owner && house)
-	{
-		StackManager::Get().RemoveUnit(SIExtraCode_A, house, owner);
-	}
+	StackManager::Get().RemoveBuff(this);
 }
 
 // ============================================================
-// EffectTriggerPointerGotInvalid - 指针失效时清理栈
+// OnEnterState_Remove - Remove 状态时将自身出栈（Buff_TryRemove 等直接移除路径）
+// ============================================================
+void StackPushBuffClass::OnEnterState_Remove()
+{
+	StackManager::Get().RemoveBuff(this);
+}
+
+// ============================================================
+// EffectTriggerPointerGotInvalid - 指针失效时清理栈（已由 OnEnterState_Remove 覆盖，保留为空防止基类误操作）
 // ============================================================
 void StackPushBuffClass::EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed)
 {
-	StackManager::Get().OnPointerGotInvalid(ptr, removed);
 }

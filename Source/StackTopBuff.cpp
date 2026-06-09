@@ -42,12 +42,17 @@ void StackTopBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 
 	int stackId = SIExtraCode_A;
 
-	// 3. 查找栈顶单位
-	TechnoClass* topUnit = StackManager::Get().GetTop(stackId, ownerHouse);
+	// 3. 获取栈顶 buff 实例
+	SIBuffClass* topBuff = StackManager::Get().GetTop(stackId, ownerHouse);
+	if (!topBuff)
+		return;
+
+	// 4. 通过 buff 实例获取所属单位
+	TechnoClass* topUnit = topBuff->GetOwnerTechno();
 	if (!topUnit)
 		return;
 
-	// 4. 获取栈顶单位的 WIC 扩展数据接口
+	// 5. 获取栈顶单位的 WIC 扩展数据接口
 	SIInterface_ExtendData* ext = SIClassManager::GetExtendData(topUnit);
 	if (!ext)
 		return;
@@ -55,7 +60,7 @@ void StackTopBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 	TechnoClass* source = GetSourceTechno();
 	HouseClass* sourceHouse = GetActiveSourceHouse();
 
-	// 5. 遍历 Effect.AcceptBuffs，为栈顶单位创建/合并 Buff
+	// 6. 遍历 Effect.AcceptBuffs，为栈顶单位创建/合并 Buff
 	auto& buffList = Type->SIEffect_AcceptBuffs;
 	for (size_t i = 0; i < buffList.size(); ++i)
 	{
@@ -66,20 +71,16 @@ void StackTopBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 		}
 	}
 
-	// 6. 出栈模式：移除栈顶单位的 StackPushBuff
+	// 7. 出栈模式：直接结束栈顶 buff 实例（触发 After/Remove 出栈）
 	if (SIEffectMode_0 != 0)
 	{
-		SIBuffTypeClass* pushBuffType = SIClassManager::BuffType_Find("StackPush");
-		if (pushBuffType)
-		{
-			ext->Buff_TryRemove(pushBuffType);
-		}
+		topBuff->TryAfter();
 	}
 
-	// 7. 减少剩余次数
+	// 8. 减少剩余次数
 	--SICountLeft;
 
-	// 8. 次数耗尽 → 结束自己
+	// 9. 次数耗尽 → 结束自己
 	if (SICountLeft <= 0)
 	{
 		EnterState(SIBuffClass_State::结束);

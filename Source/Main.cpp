@@ -48,7 +48,7 @@ public:
 
 	virtual void PointerGotInvalid(AbstractClass* const pObject, bool bRemoved) override
 	{
-		StackManager::Get().OnPointerGotInvalid(pObject, bRemoved);
+		// StackPushBuff 已通过 OnEnterState_Remove 自行出栈，无需额外处理
 	}
 
 	virtual void FinalSwizzle() override
