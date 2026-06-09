@@ -35,25 +35,29 @@ Effect.ExtraCodeA=0    ; 整数, 栈 ID, 不同 ID 表示不同的栈, 默认 0
 Effect.Type=StackTop
 ```
 
-查找指定栈的栈顶单位，通过 SDK 接口为其附加若干 Buff。支持循环触发和弹出模式。
+查找指定栈的栈顶单位，通过 SDK 接口为其附加若干 Buff。支持范围影响、循环触发和弹出模式。
 
 ### 效果种类相关属性
 
 ```ini
 [SomeBuffType]
 Effect.ExtraCodeA=0        ; 整数, 栈 ID, 默认 0
-Effect.AcceptBuffs=        ; Buff 列表, 给栈顶单位附加的 Buff
+; 通用效果属性
+Effect.Anims=              ; 两个动画, 【生效时在自己身上播放的动画】【生效时在受影响单位身上播放的动画】, 不写就不显示动画
+Effect.AcceptBuffs=        ; Buff 列表, 挂载这些 Buff, 没设置就不挂载
+Effect.Counts=-1           ; 整数, 生效次数, 负数 = 无限次, 0 = 无法生效并直接结束, 默认 -1
+Effect.Delay=0             ; 整数, 每隔这么多帧生效一次, 小于 0 按 0 算, 默认 0, 单位: 帧
+Effect.Range=0             ; 浮点数, 影响的范围(半径), 0 = 只影响栈顶单位, 大于 0 = 影响范围内所有单位, 默认 0, 单位: 格子
 Effect.Modes=0             ; 整数, 弹出模式, 默认 0
                            ; 0 = 仅附加, 不弹出
                            ; 1 = 附加后弹出栈顶（结束栈顶单位的 StackPush）
-Effect.Counts=-1            ; 整数, 触发次数, 默认 -1
-Effect.Delay=0             ; 整数, 触发间隔（帧数）, 0 = 每帧触发, 默认 0
 ```
 
 ### 说明
 
 - 通过栈顶的 **buff 实例** 获取所属单位和执行出栈，无需按类型字符串查找
 - 出栈时直接调用 `buff->TryAfter()`，路径更短
+- `Effect.Range > 0` 时使用 WIC 的 `ForEach_Techno` 遍历全图单位，按距离筛选后挂载
 
 ## 构建
 
