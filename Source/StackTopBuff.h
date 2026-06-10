@@ -76,9 +76,6 @@ public:
 	// 生效时：每轮触发执行核心逻辑
 	virtual void EffectAI(SIBuffClass_EffectData* 生效数据) override;
 
-	// 指针失效回调
-	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override;
-
 	// SIExtraCode_A = 栈 ID（自动存读档）
 	// SIEffectMode_0 = 出栈标志（自动存读档）
 };

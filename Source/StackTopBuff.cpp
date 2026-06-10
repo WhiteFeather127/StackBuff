@@ -176,6 +176,8 @@ static bool CALLBACK ForEachRangeCB(void* param, SIInterface_ExtendData* ext)
 	return false; // 继续遍历
 }
 
+
+
 // ============================================================
 // EffectAI - 手动管理 Delay / Count，到时执行
 // ============================================================
@@ -344,11 +346,4 @@ void StackTopBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 	// SICountLeft == 0 的情况已在 OnEnterState_Active 中处理，不会到达此处
 }
 
-// ============================================================
-// EffectTriggerPointerGotInvalid - 指针失效回调
-// ============================================================
-void StackTopBuffClass::EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed)
-{
-	DEBUG_LOG("[StackTop] %s: ptr=%p  removed=%d  UID=%d  stackId=%d\n",
-		__FUNCTION__, (void*)ptr, removed, UID, SIExtraCode_A);
-}
+

@@ -41,3 +41,14 @@ void Debug::Log(const char* pFormat, ...)
 	typedef void(__stdcall* GameLogFunc)(const char*);
 	reinterpret_cast<GameLogFunc>(0x4068E0)(msgBuf);
 }
+
+// ============================================================
+// Internal_DebugLog(char8_t) — char8_t 重载
+// SDK (WIC.Template.h) 中 local 声明了 const char8_t* 版本，
+// 需要在全局提供定义。直接将格式串转发到 const char* 版本。
+// ============================================================
+void Internal_DebugLog(const char8_t* pFormat, ...)
+{
+	// u8"..." 的 ASCII 子集与 const char* 编码兼容，直接转发格式串
+	Debug::Log((const char*)pFormat);
+}
