@@ -16,8 +16,8 @@ DevBuild/
 *.vcxproj.user
 .vs/
 
-# SDK (copy from workspace, not stored in repo)
-Source/SDK/
-
 # IntDir
 IntDir/
+
+# Patches (Syringe .inj 等)
+Patches/
