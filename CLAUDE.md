@@ -34,6 +34,9 @@ StackBuffs/
 │   ├── StackPushBuff.cpp        # StackPushBuffClass 实现
 │   ├── StackTopBuff.h           # StackTopBuffClass 头文件
 │   ├── StackTopBuff.cpp         # StackTopBuffClass 实现
+│   ├── Debug.h                  # 调试日志系统头文件
+│   ├── Debug.cpp                # 调试日志系统实现（含 char8_t 重载）
+│   ├── ForceInclude.h           # 强制包含头文件（/FI 注入，C++20 char8_t 兼容）
 │   └── YRMath_fixed.h           # 数学函数辅助
 ├── Patches/
 │   └── StackBuffs.dll.inj      # Syringe 钩子注入配置

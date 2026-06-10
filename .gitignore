@@ -24,3 +24,7 @@ IntDir/
 
 # Patches (Syringe .inj 等)
 Patches/
+
+# Build logs
+err.txt
+out.txt
