@@ -27,8 +27,13 @@ extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 // 当游戏存档时, ECGameClass_SaveGame 会遍历所有注册的
 // ECGameClass_ 实例并调用其 SaveGame
 // 当游戏读档时同理触发 LoadGame → FinalSwizzle
-// 我们也通过 ECListener::Listen_AfterLoadGame 做额外恢复
+// 
+// 重建策略：
+//   AfterLoadGame 阶段 WIC 尚未就绪，仅设置重建标记。
+//   首个 StackPushBuff::EffectAI 运行时（正常游戏帧）
+//   才实际执行 RebuildFromUIDs()，此时 WIC API 完全可用。
 // ============================================================
+
 class StackSaveLoadHandler : public ECGameClass_
 {
 public:
@@ -59,7 +64,7 @@ public:
 
 	virtual void Update() override
 	{
-		// 纯存档辅助对象，不需要每帧更新
+		// EC 框架不会实际调用此函数，重建由 StackPushBuff::EffectAI 触发
 	}
 };
 
@@ -94,6 +99,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 			{
 				DEBUG_LOG("[Main] ClearScenario -> clearing all stacks\n");
 				StackManager::Get().ClearAll();
+			});
+
+			// 注册读档完成后的栈重建调度
+			// AfterLoadGame 时 WIC 尚未完全就绪（Swizzle 未生效）
+			// 因此仅设置标记，实际重建延迟到首个 StackPushBuff::EffectAI 执行
+			ECListener::Listen_AfterLoadGame([]()
+			{
+				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild (via EffectAI)\n");
+				StackManager::Get().ScheduleRebuild();
 			});
 		};
 

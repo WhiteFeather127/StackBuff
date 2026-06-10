@@ -34,6 +34,19 @@ void StackPushBuffClass::OnEnterState_Remove()
 }
 
 // ============================================================
+// EffectAI - 每帧 AI
+// 读档后 WIC 已完全就绪，在此触发栈重建（延迟到游戏正常运行后）
+// ============================================================
+void StackPushBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
+{
+	auto& mgr = StackManager::Get();
+	if (mgr.NeedsRebuild())
+	{
+		mgr.RebuildFromUIDs();
+	}
+}
+
+// ============================================================
 // EffectTriggerPointerGotInvalid - 指针失效通知
 // 注意：此回调仅通知 buff 某个外部指针已失效，buff 实例本身仍存活。
 // 不应在此处从 StackManager 移除 buff，否则栈会被错误清空。

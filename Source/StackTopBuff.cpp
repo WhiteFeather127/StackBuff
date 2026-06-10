@@ -89,7 +89,7 @@ static void ApplyBuffsToTarget(
 		PlayAnimOnCoord(targetAnim, targetCoord);
 
 	// 挂载 Buff
-	for (size_t i = 0; i < buffCount; ++i)
+	for (size_t i = 0; i < buffList.size(); ++i)
 	{
 		SIBuffTypeClass* buffType = buffList.GetItem(i);
 		if (!buffType || !source || !sourceHouse)

@@ -35,6 +35,9 @@ public:
 	// 移除（Remove）时：将单位出栈（双保险，保证任何路径都出栈）
 	virtual void OnEnterState_Remove() override;
 
+	// 每帧 AI — 用于读档后延迟重建栈（此时 WIC 已完全就绪）
+	virtual void EffectAI(SIBuffClass_EffectData* 生效数据) override;
+
 	// 指针失效时：清理栈
 	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override;
 
