@@ -1,6 +1,5 @@
 ﻿#include "StackPushBuff.h"
 #include "StackManager.h"
-#include "Debug.h"
 
 // ============================================================
 // EffectDataInit - 读取栈 ID 配置
@@ -8,7 +7,6 @@
 void StackPushBuffClass::EffectDataInit()
 {
 	SIExtraCode_A = Type->SIEffect_ExtraCodeA;
-	DEBUG_LOG("[StackPush] %s: stackId=%d\n", __FUNCTION__, SIExtraCode_A);
 }
 
 // ============================================================
@@ -16,7 +14,6 @@ void StackPushBuffClass::EffectDataInit()
 // ============================================================
 void StackPushBuffClass::OnEnterState_Active()
 {
-	DEBUG_LOG("[StackPush] %s: push stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().Push(SIExtraCode_A, this);
 }
 
@@ -25,7 +22,6 @@ void StackPushBuffClass::OnEnterState_Active()
 // ============================================================
 void StackPushBuffClass::OnEnterState_After()
 {
-	DEBUG_LOG("[StackPush] %s: remove (After) stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().RemoveBuff(this);
 }
 
@@ -34,14 +30,15 @@ void StackPushBuffClass::OnEnterState_After()
 // ============================================================
 void StackPushBuffClass::OnEnterState_Remove()
 {
-	DEBUG_LOG("[StackPush] %s: remove (Remove) stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().RemoveBuff(this);
 }
 
 // ============================================================
-// EffectTriggerPointerGotInvalid - 指针失效时清理栈（已由 OnEnterState_Remove 覆盖，保留为空防止基类误操作）
+// EffectTriggerPointerGotInvalid - 指针失效通知
+// 注意：此回调仅通知 buff 某个外部指针已失效，buff 实例本身仍存活。
+// 不应在此处从 StackManager 移除 buff，否则栈会被错误清空。
+// 移除操作由 OnEnterState_After / OnEnterState_Remove 负责。
 // ============================================================
 void StackPushBuffClass::EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed)
 {
-	DEBUG_LOG("[StackPush] %s: ptr=%p  removed=%d  UID=%d\n", __FUNCTION__, (void*)ptr, removed, UID);
 }
