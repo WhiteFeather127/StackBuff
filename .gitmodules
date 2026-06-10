@@ -1,3 +1,6 @@
 [submodule "YRpp"]
 	path = YRpp
 	url = https://github.com/Phobos-developers/YRpp.git
+[submodule "EC-SDK"]
+	path = EC-SDK
+	url = https://github.com/Everything-Compatible/EC-SDK.git

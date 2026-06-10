@@ -50,14 +50,34 @@ class StackTopBuffClass : public SIBuffClass
 public:
 	StackTopBuffClass() : SIBuffClass() {}
 
+	// ========== 生命周期阶段 ==========
+
 	// 初始化：读取配置
 	virtual void EffectDataInit() override;
 
-	// 激发阶段：重置计数器和延迟
+	// Init — 挂载阶段
+	virtual void OnEnterState_Init() override;
+
+	// Mark — 标记阶段
+	virtual void OnEnterState_Mark() override;
+
+	// Active — 激发阶段：重置计数器和延迟
 	virtual void OnEnterState_Active() override;
+
+	// Effect — 生效阶段
+	virtual void OnEnterState_Effect() override;
+
+	// After — 结束阶段
+	virtual void OnEnterState_After() override;
+
+	// Remove — 移除阶段
+	virtual void OnEnterState_Remove() override;
 
 	// 生效时：每轮触发执行核心逻辑
 	virtual void EffectAI(SIBuffClass_EffectData* 生效数据) override;
+
+	// 指针失效回调
+	virtual void EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed) override;
 
 	// SIExtraCode_A = 栈 ID（自动存读档）
 	// SIEffectMode_0 = 出栈标志（自动存读档）

@@ -11,7 +11,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ThisDir>$(MSBuildThisFileDirectory)</ThisDir>
-    <SDKDir>$(ThisDir)Source\SDK</SDKDir>
+    <SDKDir>$(ThisDir)EC-SDK</SDKDir>
     <YRppDir>$(ThisDir)YRpp</YRppDir>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
@@ -58,7 +58,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 /FI"shlwapi.h" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -85,7 +85,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 /FI"shlwapi.h" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,28 +101,30 @@
     <ClCompile Include="Source\StackManager.cpp" />
     <ClCompile Include="Source\StackPushBuff.cpp" />
     <ClCompile Include="Source\StackTopBuff.cpp" />
+    <ClCompile Include="Source\Debug.cpp" />
     <!-- SDK source files -->
-    <ClCompile Include="Source\SDK\EC.cpp" />
-    <ClCompile Include="Source\SDK\EC.GameClass.cpp" />
-    <ClCompile Include="Source\SDK\EC.LoadSave.cpp" />
-    <ClCompile Include="Source\SDK\EC.Misc.cpp" />
-    <ClCompile Include="Source\SDK\EC.ObjBase.cpp" />
-    <ClCompile Include="Source\SDK\ExtJson.cpp" />
-    <ClCompile Include="Source\SDK\IH.Ext.cpp" />
-    <ClCompile Include="Source\SDK\IH.File.cpp" />
-    <ClCompile Include="Source\SDK\IH.Initial.cpp" />
-    <ClCompile Include="Source\SDK\IH.Loader.cpp" />
-    <ClCompile Include="Source\SDK\SyringeEx.cpp" />
-    <ClCompile Include="Source\SDK\WIC.Buff.cpp" />
-    <ClCompile Include="Source\SDK\WIC.Define.cpp" />
-    <ClCompile Include="Source\SDK\WIC.Interface.cpp" />
-    <ClCompile Include="Source\SDK\ThirdParty\cJSON\cJSON.c" />
+    <ClCompile Include="$(SDKDir)\EC.cpp" />
+    <ClCompile Include="$(SDKDir)\EC.GameClass.cpp" />
+    <ClCompile Include="$(SDKDir)\EC.LoadSave.cpp" />
+    <ClCompile Include="$(SDKDir)\EC.Misc.cpp" />
+    <ClCompile Include="$(SDKDir)\EC.ObjBase.cpp" />
+    <ClCompile Include="$(SDKDir)\ExtJson.cpp" />
+    <ClCompile Include="$(SDKDir)\IH.Ext.cpp" />
+    <ClCompile Include="$(SDKDir)\IH.File.cpp" />
+    <ClCompile Include="$(SDKDir)\IH.Initial.cpp" />
+    <ClCompile Include="$(SDKDir)\IH.Loader.cpp" />
+    <ClCompile Include="$(SDKDir)\SyringeEx.cpp" />
+    <ClCompile Include="$(SDKDir)\WIC.Buff.cpp" />
+    <ClCompile Include="$(SDKDir)\WIC.Define.cpp" />
+    <ClCompile Include="$(SDKDir)\WIC.Interface.cpp" />
+    <ClCompile Include="$(SDKDir)\ThirdParty\cJSON\cJSON.c" />
   </ItemGroup>
   <!-- Header files -->
   <ItemGroup>
     <ClInclude Include="Source\StackManager.h" />
     <ClInclude Include="Source\StackPushBuff.h" />
     <ClInclude Include="Source\StackTopBuff.h" />
+    <ClInclude Include="Source\Debug.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

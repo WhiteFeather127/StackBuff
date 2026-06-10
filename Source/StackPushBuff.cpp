@@ -1,5 +1,6 @@
 ﻿#include "StackPushBuff.h"
 #include "StackManager.h"
+#include "Debug.h"
 
 // ============================================================
 // EffectDataInit - 读取栈 ID 配置
@@ -7,6 +8,7 @@
 void StackPushBuffClass::EffectDataInit()
 {
 	SIExtraCode_A = Type->SIEffect_ExtraCodeA;
+	DEBUG_LOG("[StackPush] %s: stackId=%d\n", __FUNCTION__, SIExtraCode_A);
 }
 
 // ============================================================
@@ -14,6 +16,7 @@ void StackPushBuffClass::EffectDataInit()
 // ============================================================
 void StackPushBuffClass::OnEnterState_Active()
 {
+	DEBUG_LOG("[StackPush] %s: push stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().Push(SIExtraCode_A, this);
 }
 
@@ -22,6 +25,7 @@ void StackPushBuffClass::OnEnterState_Active()
 // ============================================================
 void StackPushBuffClass::OnEnterState_After()
 {
+	DEBUG_LOG("[StackPush] %s: remove (After) stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().RemoveBuff(this);
 }
 
@@ -30,6 +34,7 @@ void StackPushBuffClass::OnEnterState_After()
 // ============================================================
 void StackPushBuffClass::OnEnterState_Remove()
 {
+	DEBUG_LOG("[StackPush] %s: remove (Remove) stackId=%d  UID=%d\n", __FUNCTION__, SIExtraCode_A, UID);
 	StackManager::Get().RemoveBuff(this);
 }
 
@@ -38,4 +43,5 @@ void StackPushBuffClass::OnEnterState_Remove()
 // ============================================================
 void StackPushBuffClass::EffectTriggerPointerGotInvalid(AbstractClass* ptr, bool removed)
 {
+	DEBUG_LOG("[StackPush] %s: ptr=%p  removed=%d  UID=%d\n", __FUNCTION__, (void*)ptr, removed, UID);
 }

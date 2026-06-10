@@ -6,6 +6,7 @@
 #include <WIC.h>
 #include <Syringe.h>
 
+#include "Debug.h"
 #include "StackManager.h"
 #include "StackPushBuff.h"
 #include "StackTopBuff.h"
@@ -83,12 +84,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 
 		std::function<void()> fnFirst = []()
 		{
+			DEBUG_LOG("[Main] Debug system ready\n");
+
 			// 延迟创建 SaveLoadHandler，确保 GameClassList 已初始化
 			static StackSaveLoadHandler g_saveLoadHandler;
 
 			// 注册对局结束清理回调
 			ECListener::Listen_ClearScenario([]()
 			{
+				DEBUG_LOG("[Main] ClearScenario -> clearing all stacks\n");
 				StackManager::Get().ClearAll();
 			});
 		};
@@ -98,11 +102,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 			try
 			{
 				SIClassManager::RegisterBuff<StackPushBuffClass>("StackPush");
+				DEBUG_LOG("[Main] Registered StackPush buff\n");
+
 				SIClassManager::RegisterBuff<StackTopBuffClass>("StackTop");
+				DEBUG_LOG("[Main] Registered StackTop buff\n");
 			}
 			catch (SIException& e)
 			{
 				// 注册失败时记录错误，防止崩溃
+				DEBUG_LOG("[Main] ERROR: RegisterBuff failed: %s\n", e.what());
 			}
 		};
 
