@@ -35,15 +35,12 @@ void StackPushBuffClass::OnEnterState_Remove()
 
 // ============================================================
 // EffectAI - 每帧 AI
-// 读档后 WIC 已完全就绪，在此触发栈重建（延迟到游戏正常运行后）
+// 不再在此触发栈重建，改由 Syringe MainLoop 钩子驱动
+// 保留空实现以防 WIC 框架需要调用
 // ============================================================
 void StackPushBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 {
-	auto& mgr = StackManager::Get();
-	if (mgr.NeedsRebuild())
-	{
-		mgr.RebuildFromUIDs();
-	}
+	// 栈重建已交由 Syringe MainLoop 钩子（0x55D360）驱动
 }
 
 // ============================================================

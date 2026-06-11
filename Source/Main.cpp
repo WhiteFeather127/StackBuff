@@ -30,8 +30,8 @@ extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 // 
 // 重建策略：
 //   AfterLoadGame 阶段 WIC 尚未就绪，仅设置重建标记。
-//   首个 StackPushBuff::EffectAI 运行时（正常游戏帧）
-//   才实际执行 RebuildFromUIDs()，此时 WIC API 完全可用。
+//   随后由 Syringe 主循环钩子（Unsorted::MainLoop @ 0x55D360）
+//   在游戏帧中调用 StackManager::Update() 触发重建。
 // ============================================================
 
 class StackSaveLoadHandler : public ECGameClass_
@@ -64,7 +64,7 @@ public:
 
 	virtual void Update() override
 	{
-		// EC 框架不会实际调用此函数，重建由 StackPushBuff::EffectAI 触发
+		// EC 框架不会实际调用此函数，重建由 Syringe MainLoop 钩子触发
 	}
 };
 
@@ -103,10 +103,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 
 			// 注册读档完成后的栈重建调度
 			// AfterLoadGame 时 WIC 尚未完全就绪（Swizzle 未生效）
-			// 因此仅设置标记，实际重建延迟到首个 StackPushBuff::EffectAI 执行
+			// 因此仅设置标记，实际重建延迟到 MainLoop 钩子中执行
 			ECListener::Listen_AfterLoadGame([]()
 			{
-				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild (via EffectAI)\n");
+				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild (via MainLoop hook)\n");
 				StackManager::Get().ScheduleRebuild();
 			});
 		};
@@ -138,4 +138,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 		);
 	}
 	return TRUE;
+}
+
+// ============================================================
+// Syringe 主循环钩子 — 每帧调用 StackManager::Update()
+// 读档后的重建在 AfterLoadGame 设置标记后，由下个游戏帧触发
+// ============================================================
+DEFINE_HOOK(0x55D360, MainLoopHook, 5)
+{
+	StackManager::Get().Update();
+	return 0;
 }

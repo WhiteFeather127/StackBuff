@@ -292,7 +292,19 @@ void StackManager::FinalSwizzle()
 }
 
 // ============================================================
-// RebuildFromUIDs - EffectAI 中调用（此时 WIC 完全就绪）
+// Update - 由 Syringe MainLoop 钩子每帧调用
+// 如果待重建标记已设置，则触发 RebuildFromUIDs
+// ============================================================
+void StackManager::Update()
+{
+	if (m_pendingRebuild)
+	{
+		RebuildFromUIDs();
+	}
+}
+
+// ============================================================
+// RebuildFromUIDs - MainLoop 钩子中调用（此时 WIC 完全就绪）
 // 分两遍：
 //   第一遍：ForEach_Techno 建立 UID → SIBuffClass* 映射
 //   第二遍：按 m_pendingUIDs 顺序（= 原始入栈顺序）查找并 push
