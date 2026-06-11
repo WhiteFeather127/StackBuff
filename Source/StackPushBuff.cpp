@@ -35,12 +35,11 @@ void StackPushBuffClass::OnEnterState_Remove()
 
 // ============================================================
 // EffectAI - 每帧 AI
-// 不再在此触发栈重建，改由 Syringe MainLoop 钩子驱动
+// 不再在此触发栈重建，改由加载完成钩子（0x67E68A）驱动
 // 保留空实现以防 WIC 框架需要调用
 // ============================================================
 void StackPushBuffClass::EffectAI(SIBuffClass_EffectData* 生效数据)
 {
-	// 栈重建已交由 Syringe MainLoop 钩子（0x55D360）驱动
 }
 
 // ============================================================

@@ -28,9 +28,8 @@ extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 // 当游戏读档时同理触发 LoadGame → FinalSwizzle
 // 
 // 重建策略：
-//   AfterLoadGame 阶段用 SEH 保护直接调用 TryRebuild()，
-//   若 WIC 可用则立即完成重建；若发生访问违例则
-//   由主循环 MainLoop 钩子（0x55D360）兜底触发 Update()。
+//   AfterLoadGame → TryRebuild() 设标记
+//   加载完成钩子（0x67E68A）→ Update() → RebuildFromUIDs()
 // ============================================================
 
 class StackSaveLoadHandler : public ECGameClass_
@@ -63,7 +62,7 @@ public:
 
 	virtual void Update() override
 	{
-		// EC 框架不会实际调用此函数，重建由 Hooks.MainLoop.cpp 兜底
+		// EC 框架不会实际调用此函数，重建由 0x67E68A 钩子触发
 	}
 };
 
@@ -100,11 +99,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 				StackManager::Get().ClearAll();
 			});
 
-			// 注册读档完成后的栈重建调度
-			// AfterLoadGame 阶段可安全调用 ForEach_Techno 收集 Buff，
-			// 但 House 指针尚未 Swizzle，Push() 会崩溃。
-			// 因此 TryRebuild() 仅设置重建标记，
-			// 实际重建由加载完成钩子（0x67E68A）执行。
+			// 注册读档完成后的栈重建
+			// AfterLoadGame 中仅设标记，0x67E68A 钩子中执行实际重建
 			ECListener::Listen_AfterLoadGame([]()
 			{
 				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild\n");

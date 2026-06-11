@@ -282,53 +282,29 @@ void StackManager::LoadFromStream(ECStreamReader& stream)
 
 // ============================================================
 // FinalSwizzle - WIC 尚未就绪，不做任何操作
-// 在 AfterLoadGame 中调用 RebuildFromUIDs
 // ============================================================
 void StackManager::FinalSwizzle()
 {
-	// WIC 的 GetExtendData 在此阶段不可用，跳过
-	DEBUG_LOG("[StackMgr] FinalSwizzle: deferred to AfterLoadGame (%zu pending)\n",
-		m_pendingUIDs.size());
 }
 
 // ============================================================
-// TryRebuild - 在 AfterLoadGame 中调用
-// AfterLoadGame 阶段 ForEach_Techno 可用但 House 指针未 Swizzle，
-// Push() 会崩溃。因此只设标记，实际重建由加载完成钩子执行。
+// TryRebuild - AfterLoadGame 中设标记，0x67E68A 钩子中执行
 // ============================================================
 void StackManager::TryRebuild()
 {
 	if (!m_pendingUIDs.empty())
-	{
-		DEBUG_LOG("[StackMgr] TryRebuild: scheduling for load-complete hook\n");
 		m_pendingRebuild = true;
-	}
-	else
-	{
-		DEBUG_LOG("[StackMgr] TryRebuild: no pending UIDs, nothing to do\n");
-	}
 }
 
 // ============================================================
-// Update - 由 Syringe MainLoop 钩子每帧调用（仅兜底）
-// 仅当 TryRebuild 失败（m_pendingRebuild == true）时才有实质工作
-// 内部 SEH 保护：若 WIC 仍未就绪则继续等待下一帧
+// Update - 由加载完成钩子（0x67E68A）调用
 // ============================================================
 void StackManager::Update()
 {
 	if (m_pendingRebuild)
 	{
-		__try
-		{
-			DEBUG_LOG("[StackMgr] Update: fallback rebuild attempt\n");
-			RebuildFromUIDs();
-			m_pendingRebuild = false;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			// WIC 仍未就绪，下一帧再试
-			DEBUG_LOG("[StackMgr] Update: fallback FAILED, will retry next frame\n");
-		}
+		RebuildFromUIDs();
+		m_pendingRebuild = false;
 	}
 }
 
@@ -369,13 +345,9 @@ static bool CALLBACK RebuildFromUIDsCB(void* param, SIInterface_ExtendData* ext)
 void StackManager::RebuildFromUIDs()
 {
 	if (m_pendingUIDs.empty())
-	{
-		DEBUG_LOG("[StackMgr] RebuildFromUIDs: no pending UIDs\n");
-		m_pendingRebuild = false;
 		return;
-	}
 
-	// 第一遍：建立 UID → SIBuffClass* 映射（用 m_pendingUIDs 中的 UID 初始化）
+	// 第一遍：建立 UID → SIBuffClass* 映射
 	std::map<int, SIBuffClass*> uidToBuff;
 	for (const auto& [stackId, uid] : m_pendingUIDs)
 		uidToBuff[uid] = nullptr;
@@ -386,10 +358,7 @@ void StackManager::RebuildFromUIDs()
 
 	SITool::ForEach_Techno(&ctx, RebuildFromUIDsCB);
 
-	DEBUG_LOG("[StackMgr] RebuildFromUIDs: found %d buffs for %u pending entries\n",
-		ctx.TotalBuffs, (unsigned)m_pendingUIDs.size());
-
-	// 第二遍：按 m_pendingUIDs 的原始顺序依次 push（保证栈顺序不变）
+	// 第二遍：按原始顺序依次 push
 	int pushed = 0;
 	for (const auto& [stackId, uid] : m_pendingUIDs)
 	{
@@ -399,15 +368,10 @@ void StackManager::RebuildFromUIDs()
 			Push(stackId, it->second);
 			pushed++;
 		}
-		else
-		{
-			DEBUG_LOG("[StackMgr] RebuildFromUIDs: UID=%d not found (buff may have expired)\n", uid);
-		}
 	}
+
+	m_pendingUIDs.clear();
 
 	DEBUG_LOG("[StackMgr] RebuildFromUIDs: done  pending=%u  pushed=%d\n",
 		(unsigned)m_pendingUIDs.size(), pushed);
-
-	m_pendingUIDs.clear();
-	m_pendingRebuild = false;
 }

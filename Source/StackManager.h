@@ -40,19 +40,14 @@ public:
 	void LoadFromStream(ECStreamReader& stream);
 	void FinalSwizzle();
 
-	// 从 UID 列表匹配 Buff 重建栈（AfterLoadGame 直接尝试，MainLoop 钩子兜底）
+	// 从 UID 列表匹配 Buff 重建栈
 	void RebuildFromUIDs();
 
-	// 尝试立即重建（AfterLoadGame 中调用，内部 SEH 保护）
-	// 若失败则设置延迟重建标记，由主循环钩子 Update() 兜底
+	// AfterLoadGame 中设标记，0x67E68A 钩子中执行
 	void TryRebuild();
 
-	// 每帧由 Syringe MainLoop 钩子调用（仅当立即重建失败时才有实质工作）
+	// 由加载完成钩子（0x67E68A）调用
 	void Update();
-
-	// 延迟重建标记管理
-	void ScheduleRebuild() { m_pendingRebuild = true; }
-	bool NeedsRebuild() const { return m_pendingRebuild; }
 
 private:
 	StackManager() = default;
@@ -65,7 +60,7 @@ private:
 		SIBuffClass* Buff;
 	};
 
-	// 读档后待重建标记（TryRebuild 失败时设置，MainLoop 钩子兜底）
+	// 读档后待重建标记
 	bool m_pendingRebuild = false;
 
 	// 读档时暂存的 UID 列表：(stackId, buffUID)
