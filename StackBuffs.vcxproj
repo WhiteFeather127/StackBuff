@@ -101,6 +101,7 @@
     <ClCompile Include="Source\StackManager.cpp" />
     <ClCompile Include="Source\StackPushBuff.cpp" />
     <ClCompile Include="Source\StackTopBuff.cpp" />
+    <ClCompile Include="Source\Hooks.MainLoop.cpp" />
     <ClCompile Include="Source\Debug.cpp" />
     <!-- SDK source files -->
     <ClCompile Include="$(SDKDir)\EC.cpp" />

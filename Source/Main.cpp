@@ -4,7 +4,6 @@
 #include <EC.GameClass.h>
 #include <EC.Stream.h>
 #include <WIC.h>
-#include <Syringe.h>
 
 #include "Debug.h"
 #include "StackManager.h"
@@ -30,8 +29,9 @@ extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 // 
 // 重建策略：
 //   AfterLoadGame 阶段 WIC 尚未就绪，仅设置重建标记。
-//   随后由 Syringe 主循环钩子（Unsorted::MainLoop @ 0x55D360）
-//   在游戏帧中调用 StackManager::Update() 触发重建。
+//   随后由 Hooks.MainLoop.cpp 中的 Syringe 主循环钩子
+//   （Unsorted::MainLoop @ 0x55D360）在游戏帧中调用
+//   StackManager::Update() 触发重建。
 // ============================================================
 
 class StackSaveLoadHandler : public ECGameClass_
@@ -64,7 +64,7 @@ public:
 
 	virtual void Update() override
 	{
-		// EC 框架不会实际调用此函数，重建由 Syringe MainLoop 钩子触发
+		// EC 框架不会实际调用此函数，重建由 Hooks.MainLoop.cpp 钩子触发
 	}
 };
 
@@ -138,14 +138,4 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 		);
 	}
 	return TRUE;
-}
-
-// ============================================================
-// Syringe 主循环钩子 — 每帧调用 StackManager::Update()
-// 读档后的重建在 AfterLoadGame 设置标记后，由下个游戏帧触发
-// ============================================================
-DEFINE_HOOK(0x55D360, MainLoopHook, 5)
-{
-	StackManager::Get().Update();
-	return 0;
 }
