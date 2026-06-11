@@ -292,19 +292,47 @@ void StackManager::FinalSwizzle()
 }
 
 // ============================================================
-// Update - 由 Syringe MainLoop 钩子每帧调用
-// 如果待重建标记已设置，则触发 RebuildFromUIDs
+// TryRebuild - 在 AfterLoadGame 中调用，SEH 保护直接尝试
+// 如果 WIC 就绪则立即重建，否则设标记等主循环兜底
+// ============================================================
+void StackManager::TryRebuild()
+{
+	if (!m_pendingUIDs.empty())
+	{
+		__try
+		{
+			RebuildFromUIDs();
+			DEBUG_LOG("[StackMgr] TryRebuild: immediate rebuild SUCCEEDED\n");
+			m_pendingRebuild = false;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			// WIC 内部未完全就绪（Swizzle 未生效），设标记等主循环兜底
+			DEBUG_LOG("[StackMgr] TryRebuild: immediate FAILED, deferring to MainLoop hook\n");
+			m_pendingRebuild = true;
+		}
+	}
+	else
+	{
+		DEBUG_LOG("[StackMgr] TryRebuild: no pending UIDs, nothing to do\n");
+	}
+}
+
+// ============================================================
+// Update - 由 Syringe MainLoop 钩子每帧调用（仅兜底）
+// 仅当 TryRebuild 失败（m_pendingRebuild == true）时才有实质工作
 // ============================================================
 void StackManager::Update()
 {
 	if (m_pendingRebuild)
 	{
+		DEBUG_LOG("[StackMgr] Update: fallback rebuild triggered\n");
 		RebuildFromUIDs();
 	}
 }
 
 // ============================================================
-// RebuildFromUIDs - MainLoop 钩子中调用（此时 WIC 完全就绪）
+// RebuildFromUIDs - 实际重建逻辑（WIC 完全就绪时调用）
 // 分两遍：
 //   第一遍：ForEach_Techno 建立 UID → SIBuffClass* 映射
 //   第二遍：按 m_pendingUIDs 顺序（= 原始入栈顺序）查找并 push

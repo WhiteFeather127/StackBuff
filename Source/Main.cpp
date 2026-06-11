@@ -28,10 +28,9 @@ extern "C" __declspec(dllexport) void SyringeForceLoad(void) {}
 // 当游戏读档时同理触发 LoadGame → FinalSwizzle
 // 
 // 重建策略：
-//   AfterLoadGame 阶段 WIC 尚未就绪，仅设置重建标记。
-//   随后由 Hooks.MainLoop.cpp 中的 Syringe 主循环钩子
-//   （Unsorted::MainLoop @ 0x55D360）在游戏帧中调用
-//   StackManager::Update() 触发重建。
+//   AfterLoadGame 阶段用 SEH 保护直接调用 TryRebuild()，
+//   若 WIC 可用则立即完成重建；若发生访问违例则
+//   由主循环 MainLoop 钩子（0x55D360）兜底触发 Update()。
 // ============================================================
 
 class StackSaveLoadHandler : public ECGameClass_
@@ -64,7 +63,7 @@ public:
 
 	virtual void Update() override
 	{
-		// EC 框架不会实际调用此函数，重建由 Hooks.MainLoop.cpp 钩子触发
+		// EC 框架不会实际调用此函数，重建由 Hooks.MainLoop.cpp 兜底
 	}
 };
 
@@ -101,13 +100,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 				StackManager::Get().ClearAll();
 			});
 
-			// 注册读档完成后的栈重建调度
-			// AfterLoadGame 时 WIC 尚未完全就绪（Swizzle 未生效）
-			// 因此仅设置标记，实际重建延迟到 MainLoop 钩子中执行
+			// 注册读档完成后的栈重建
+			// AfterLoadGame 阶段 WIC 已可用（HasWIC() == true），
+			// 用 SEH 保护直接尝试 RebuildFromUIDs。
+			// 若 WIC 内部尚未完全就绪（例如 Swizzle 未生效），
+			// SEH 会捕获访问违例，重建延后到主循环兜底。
 			ECListener::Listen_AfterLoadGame([]()
 			{
-				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild (via MainLoop hook)\n");
-				StackManager::Get().ScheduleRebuild();
+				DEBUG_LOG("[Main] AfterLoadGame -> attempting immediate rebuild\n");
+				StackManager::Get().TryRebuild();
 			});
 		};
 

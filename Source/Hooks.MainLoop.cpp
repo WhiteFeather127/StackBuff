@@ -4,8 +4,13 @@
 
 // ============================================================
 // Syringe 主循环钩子 — 每帧调用 StackManager::Update()
-// 读档后的重建在 AfterLoadGame 设置标记后，由下个游戏帧触发
-// 参考 Phobos 的 Misc/Hooks.*.cpp 模式
+//
+// 主要重建路径：AfterLoadGame → TryRebuild()（SEH 保护直接尝试）
+// 本钩子仅作为兜底：当 TryRebuild 因 WIC 未就绪而失败时，
+// 下个游戏帧由 Update() 检查 m_pendingRebuild 并触发重建。
+//
+// 正常情况（TryRebuild 成功）下 m_pendingRebuild == false，
+// Update() 立即返回，无实质开销。
 // ============================================================
 DEFINE_HOOK(0x55D360, MainLoopHook, 5)
 {
