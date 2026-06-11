@@ -3,17 +3,24 @@
 #include "StackManager.h"
 
 // ============================================================
-// Syringe 主循环钩子 — 每帧调用 StackManager::Update()
+// 加载完成钩子 — 读档/新对局完成后触发（仅一次，非每帧）
 //
-// 主要重建路径：AfterLoadGame → TryRebuild()（SEH 保护直接尝试）
-// 本钩子仅作为兜底：当 TryRebuild 因 WIC 未就绪而失败时，
-// 下个游戏帧由 Update() 检查 m_pendingRebuild 并触发重建。
-//
-// 正常情况（TryRebuild 成功）下 m_pendingRebuild == false，
-// Update() 立即返回，无实质开销。
+// 参考 Phobos: LoadGame_UnsetFlag (0x67E68A)
+// 和 ScenarioClass_Start_Optimizations (0x683E7F)
+// 这两个钩子在主循环开始之前、加载完成之后执行，
+// 此时 WIC 内部数据结构已就绪，可安全调用 WIC API。
 // ============================================================
-DEFINE_HOOK(0x55D360, MainLoopHook, 5)
+
+// 读档完成后触发
+DEFINE_HOOK(0x67E68A, LoadGame_Complete, 5)
 {
 	StackManager::Get().Update();
+	return 0;
+}
+
+// 新对局开始时触发（清除栈，确保空栈起始）
+DEFINE_HOOK(0x683E7F, ScenarioClass_Start, 7)
+{
+	StackManager::Get().ClearAll();
 	return 0;
 }

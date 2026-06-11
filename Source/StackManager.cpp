@@ -321,13 +321,23 @@ void StackManager::TryRebuild()
 // ============================================================
 // Update - 由 Syringe MainLoop 钩子每帧调用（仅兜底）
 // 仅当 TryRebuild 失败（m_pendingRebuild == true）时才有实质工作
+// 内部 SEH 保护：若 WIC 仍未就绪则继续等待下一帧
 // ============================================================
 void StackManager::Update()
 {
 	if (m_pendingRebuild)
 	{
-		DEBUG_LOG("[StackMgr] Update: fallback rebuild triggered\n");
-		RebuildFromUIDs();
+		__try
+		{
+			DEBUG_LOG("[StackMgr] Update: fallback rebuild attempt\n");
+			RebuildFromUIDs();
+			m_pendingRebuild = false;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			// WIC 仍未就绪，下一帧再试
+			DEBUG_LOG("[StackMgr] Update: fallback FAILED, will retry next frame\n");
+		}
 	}
 }
 
