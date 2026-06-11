@@ -100,14 +100,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 				StackManager::Get().ClearAll();
 			});
 
-			// 注册读档完成后的栈重建
-			// AfterLoadGame 阶段 WIC 已可用（HasWIC() == true），
-			// 用 SEH 保护直接尝试 RebuildFromUIDs。
-			// 若 WIC 内部尚未完全就绪（例如 Swizzle 未生效），
-			// SEH 会捕获访问违例，重建延后到主循环兜底。
+			// 注册读档完成后的栈重建调度
+			// AfterLoadGame 阶段可安全调用 ForEach_Techno 收集 Buff，
+			// 但 House 指针尚未 Swizzle，Push() 会崩溃。
+			// 因此 TryRebuild() 仅设置重建标记，
+			// 实际重建由加载完成钩子（0x67E68A）执行。
 			ECListener::Listen_AfterLoadGame([]()
 			{
-				DEBUG_LOG("[Main] AfterLoadGame -> attempting immediate rebuild\n");
+				DEBUG_LOG("[Main] AfterLoadGame -> scheduling rebuild\n");
 				StackManager::Get().TryRebuild();
 			});
 		};

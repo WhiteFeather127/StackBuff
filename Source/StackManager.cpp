@@ -292,25 +292,16 @@ void StackManager::FinalSwizzle()
 }
 
 // ============================================================
-// TryRebuild - 在 AfterLoadGame 中调用，SEH 保护直接尝试
-// 如果 WIC 就绪则立即重建，否则设标记等主循环兜底
+// TryRebuild - 在 AfterLoadGame 中调用
+// AfterLoadGame 阶段 ForEach_Techno 可用但 House 指针未 Swizzle，
+// Push() 会崩溃。因此只设标记，实际重建由加载完成钩子执行。
 // ============================================================
 void StackManager::TryRebuild()
 {
 	if (!m_pendingUIDs.empty())
 	{
-		__try
-		{
-			RebuildFromUIDs();
-			DEBUG_LOG("[StackMgr] TryRebuild: immediate rebuild SUCCEEDED\n");
-			m_pendingRebuild = false;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			// WIC 内部未完全就绪（Swizzle 未生效），设标记等主循环兜底
-			DEBUG_LOG("[StackMgr] TryRebuild: immediate FAILED, deferring to MainLoop hook\n");
-			m_pendingRebuild = true;
-		}
+		DEBUG_LOG("[StackMgr] TryRebuild: scheduling for load-complete hook\n");
+		m_pendingRebuild = true;
 	}
 	else
 	{
